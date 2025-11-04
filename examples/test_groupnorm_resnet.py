@@ -39,22 +39,25 @@ print(f"   Output dtype: {output.dtype}")
 # Test 4: Count different types of normalization layers
 print("\n4. Checking normalization layer types...")
 def count_norms(model):
-    batchnorm_count = 0
-    groupnorm_count = 0
-    stateless_bn_count = 0
+    counts = {"bn": 0, "gn": 0, "sbn": 0}
     
     def count_leaf(x):
-        nonlocal batchnorm_count, groupnorm_count, stateless_bn_count
         if isinstance(x, eqx.nn.BatchNorm):
-            batchnorm_count += 1
+            counts["bn"] += 1
         elif isinstance(x, eqx.nn.GroupNorm):
-            groupnorm_count += 1
+            counts["gn"] += 1
         elif isinstance(x, StatelessBatchNorm):
-            stateless_bn_count += 1
+            counts["sbn"] += 1
         return x
     
-    jax.tree_util.tree_map(count_leaf, model)
-    return batchnorm_count, groupnorm_count, stateless_bn_count
+    # Use tree_map to visit all nodes, treating norm layers as leaves
+    jax.tree_util.tree_map(
+        count_leaf, 
+        model, 
+        is_leaf=lambda x: isinstance(x, (eqx.nn.BatchNorm, eqx.nn.GroupNorm, StatelessBatchNorm))
+    )
+    
+    return counts["bn"], counts["gn"], counts["sbn"]
 
 bn_count, gn_count, sbn_count = count_norms(model_groupnorm)
 print(f"   BatchNorm layers: {bn_count}")
