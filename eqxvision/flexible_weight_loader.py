@@ -162,7 +162,7 @@ def flexible_load_torch_weights(
         filepath = torch_weights
     
     # Load PyTorch state dict
-    pytorch_state_dict = torch.load(filepath, map_location="cpu")
+    pytorch_state_dict = torch.load(filepath, map_location="cpu", weights_only=False)
     
     if verbose:
         print("=== Flexible Weight Loading ===")
